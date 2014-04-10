@@ -31,3 +31,8 @@ Smoothie config
 	panel.spi_cs_pin                            0.16              # spi chip select
 	panel.busy_pin                              2.13              # busy pin (Azteeg X5 use 2.11)
 
+Requirements
+------------
+
+* LiquidTWI2 from https://github.com/lincomatic/LiquidTWI2
+* Encoder library from arduino

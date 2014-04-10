@@ -21,9 +21,7 @@ Cmd_t buf;
 volatile int pos;
 volatile int toread;
 volatile byte buttons;
-volatile long current_enc;
 
-long last_enc;
 long last_ms;
 
 #define LE_ENCA 2
@@ -35,10 +33,10 @@ enum Commands {
 	READ,        // 0x00 read a result
 	GET_BUTTONS, // 0x20 read buttons
 	GET_ENCODER, // 0x40 Encoder delta
-	LCD_WRITE,   // 0x60 write to LCD, yyyxxxxx, chars...
+	LCD_WRITE,   // 0x60 write to LCD, yyyxxxxx, chars... where yyy is the row and xxxxx is the column
 	LCD_CLEAR,   // 0x80 clear the LCD
-	SET_LEDS,    // 0xA0 set the leds, leds mask
-	BEEP, 		 // 0xC0 beep buzzer
+	SET_LEDS,    // 0xA0 set the leds
+	BEEP, 		 // 0xC0 beep buzzer, optionally pass duration, frequency
 };
 
 Encoder enc(LE_ENCA, LE_ENCB);
@@ -70,7 +68,7 @@ void setup (void)
 	pos = 0;   // buffer empty
 	queue.clear();
 
-	last_enc= enc.read();
+	enc.write(0);
 	last_ms= 0;
 	selected=false;
 
@@ -103,8 +101,8 @@ ISR (SPI_STC_vect)
 				return;
 			case GET_ENCODER:
 				// return current encoder delta since last read
-				SPDR = last_enc - current_enc;
-				last_enc= current_enc;
+				SPDR = enc.read();
+				enc.write(0);
 				return;
 
 			default:
@@ -191,7 +189,6 @@ void loop (void)
 		pos= 0;
 		buttons= 0;
 		enc.write(0);
-		last_enc= 0;
 		lcd.clear();
 		lcd.setBacklight(0);
 		queue.clear();
@@ -214,8 +211,5 @@ void loop (void)
 		buttons= lcd.readButtons();
 		last_ms= now;
 	}
-
-	// this is safe to read every loop as it just copies a variable
-	current_enc= enc.read();
 }
 
