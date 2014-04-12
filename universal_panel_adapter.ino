@@ -2,6 +2,7 @@
 #include "LiquidTWI2.h"
 #include "utility/twi.h"
 #include "Wire.h"
+
 #include <Encoder.h>
 #include "RingBuffer.h"
 
@@ -61,7 +62,7 @@ void setup (void)
 	// turn on SPI in slave mode
 	//SPCR |= _BV(SPE);
 	SPCR &= ~(1<<MSTR);                // Set as slave
-    SPCR |= (1<<SPR0)|(1<<SPR1);       // divide clock by 128
+    SPCR &= ~((1<<SPR0)|(1<<SPR1));    // fastest
     SPCR |= (1<<SPE);                  // Enable SPI
 
 
@@ -72,8 +73,10 @@ void setup (void)
 	last_ms= 0;
 	selected=false;
 
+	delay(100);
+
 	lcd.setCursor(0, 0);
-	lcd.print("UPA V0.9");
+	lcd.print("UPA V0.91");
 	lcd.setCursor(0, 1);
 	lcd.print("Starting up...");
 }  // end of setup
@@ -83,6 +86,7 @@ void setup (void)
 ISR (SPI_STC_vect)
 {
 	byte b = SPDR;  // grab byte from SPI Data Register
+	SPDR = 0;
 
 	if(b == 0xFF) { // polling for free queue
 		if(queue.size() < queue.capacity()-2) {
