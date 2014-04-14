@@ -39,11 +39,10 @@ enum Commands {
 	LCD_CLEAR,   // 0x80 clear the LCD
 	SET_LEDS,    // 0xA0 set the leds
 	BEEP, 		 // 0xC0 beep buzzer, optionally pass duration, frequency
+	INIT, 		 // 0xE0 Initialize
 };
 
 Encoder enc(LE_ENCA, LE_ENCB);
-bool selected;
-
 
 // SPI interrupt routine
 ISR (SPI_STC_vect)
@@ -52,7 +51,7 @@ ISR (SPI_STC_vect)
 	//SPDR = 0;
 
 	if(b == 0xFF) { // polling for free queue
-		if(queue.size() < queue.capacity()-2) {
+		if(queue.size() < queue.capacity()-4) {
 			// if queue is partially empty deassert busy
 			digitalWrite(BUSY_PIN, LOW);
 		}
@@ -95,11 +94,23 @@ ISR (SPI_STC_vect)
 			if(queue.size() >= queue.capacity()-2) {
 				digitalWrite(BUSY_PIN, HIGH); // indicate busy here to avoid race condition
 			}
-			pos= 0;
 		}
+		pos= 0;
 	}
 
 }  // end of interrupt routine SPI_STC_vect
+
+void clear()
+{
+	pos= 0;
+	last_ms= 0;
+	buttons= 0;
+	enc.write(0);
+	lcd.clear();
+	lcd.setBacklight(0);
+	queue.clear();
+	digitalWrite(BUSY_PIN, LOW);
+}
 
 void setup (void)
 {
@@ -122,19 +133,12 @@ void setup (void)
 	SPCR &= ~(1<<MSTR);                // Set as slave
     SPCR &= ~((1<<SPR0)|(1<<SPR1));    // fastest
     SPCR |= (1<<SPE);                  // Enable SPI
+  	SPCR |= _BV(SPIE);				   // turn on interrupts
 
-
-	pos = 0;   // buffer empty
-	queue.clear();
-
-	enc.write(0);
-	last_ms= 0;
-	selected=false;
-
-	delay(100);
+    clear();
 
 	lcd.setCursor(0, 0);
-	lcd.print("UPA V0.91");
+	lcd.print("UPA V0.95");
 	lcd.setCursor(0, 1);
 	lcd.print("Starting up...");
 }  // end of setup
@@ -150,10 +154,11 @@ void handle_command(Cmd_t& c)
 				// position to write to
 				x= c.data[0]&0x1F;
 				y= c.data[0]>>5;
-				c.data[n]= 0;
 
 				lcd.setCursor(x, y);
-				lcd.print((char *)&c.data[1]);
+				for (int i = 1; i < n; ++i) {
+					lcd.write(c.data[i]);
+				}
 			}
 			break;
 
@@ -174,34 +179,16 @@ void handle_command(Cmd_t& c)
 				lcd.buzz(100, 1000);
 			}
 			break;
+
+		case INIT:
+			clear();
+			break;
 	}
 }
 
-// main loop - wait for flag set in interrupt routine
+// main loop - wait for commands
 void loop (void)
 {
-	while(digitalRead(SS) == HIGH) {
-		// deselected ignore everything
-		if(selected) {
-			selected= false;
-  			SPCR &= ~_BV(SPIE); // turn off interrupts
-  		}
-	}
-
-	// host will toggle SS to reset us
-	if(!selected) {
-		pos= 0;
-		buttons= 0;
-		enc.write(0);
-		lcd.clear();
-		lcd.setBacklight(0);
-		queue.clear();
-  		digitalWrite(BUSY_PIN, LOW);
-  		selected= true;
-		// now turn on interrupts
-  		SPCR |= _BV(SPIE);
-	}
-
 	if (!queue.isEmpty()) {
 		Cmd_t cmd;
 		queue.popFront(cmd);

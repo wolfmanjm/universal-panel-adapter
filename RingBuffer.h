@@ -20,8 +20,8 @@ template<class kind, int length> class RingBuffer {
 
     private:
         kind         buffer[length];
-        volatile int tail;
-        volatile int head;
+        volatile char tail;
+        volatile char head;
 };
 
 template<class kind, int length>  int RingBuffer<kind, length>::capacity(){
