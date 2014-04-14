@@ -1,6 +1,5 @@
 // Viki Panel
 #include "Arduino.h"
-#include "pins_arduino.h"
 #include "LiquidTWI2.h"
 #include "utility/twi.h"
 #include "Wire.h"
@@ -50,7 +49,7 @@ bool selected;
 ISR (SPI_STC_vect)
 {
 	byte b = SPDR;  // grab byte from SPI Data Register
-	SPDR = 0;
+	//SPDR = 0;
 
 	if(b == 0xFF) { // polling for free queue
 		if(queue.size() < queue.capacity()-2) {

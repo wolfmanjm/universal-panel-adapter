@@ -35,4 +35,5 @@ Requirements
 ------------
 
 * LiquidTWI2 from https://github.com/lincomatic/LiquidTWI2
-* Encoder library from arduino
+* Encoder library from http://www.pjrc.com/teensy/td_libs_Encoder.html
+
