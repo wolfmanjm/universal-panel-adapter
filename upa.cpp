@@ -3,6 +3,7 @@
 #include "LiquidTWI2.h"
 #include "utility/twi.h"
 #include "Wire.h"
+#include "digitalWriteFast.h"
 
 #include <Encoder.h>
 #include "RingBuffer.h"
@@ -31,16 +32,26 @@ long last_ms;
 #define BUSY_PIN 4
 
 // Command byte is cccnnnnn, where ccc is the command and nnnnn is the length of data in the command
+// 0xFF is a poll for queue empty
+// 0xFE is Initialize
+// 0x00 is a read results of previous command
 enum Commands {
 	READ,        // 0x00 read a result
-	GET_BUTTONS, // 0x20 read buttons
-	GET_ENCODER, // 0x40 Encoder delta
-	LCD_WRITE,   // 0x60 write to LCD, yyyxxxxx, chars... where yyy is the row and xxxxx is the column
+	GET_STATUS,  // 0x20 read buttons or encoder size is 0 for buttons, 1 for encoder
+	SET_CURSOR,  // 0x40 Set the cursor, 1 parameter yyyxxxxx, where yyy is the row and xxxxx is the column
+	LCD_WRITE,   // 0x60 write to LCD, n chars
 	LCD_CLEAR,   // 0x80 clear the LCD
-	SET_LEDS,    // 0xA0 set the leds
+	SET_LEDS,    // 0xA0 set the leds, 1 parameter, the led mask of leds to set
 	BEEP, 		 // 0xC0 beep buzzer, optionally pass duration, frequency
-	INIT, 		 // 0xE0 Initialize
+	OTHER,		 // 0xE0 some other no parameter command specified by entire command byte
+	// Other commands... 0xE0 thru 0xFF
+	INIT= 0xFE,  // Initialize
+	POLL= 0xFF   // Poll for queue empty
 };
+
+#define READ_BUTTONS 0
+#define READ_ENCODER 1
+#define READ_QUEUE   2
 
 Encoder enc(LE_ENCA, LE_ENCB);
 
@@ -48,31 +59,46 @@ Encoder enc(LE_ENCA, LE_ENCB);
 ISR (SPI_STC_vect)
 {
 	byte b = SPDR;  // grab byte from SPI Data Register
-	//SPDR = 0;
-
-	if(b == 0xFF) { // polling for free queue
-		if(queue.size() < queue.capacity()-4) {
-			// if queue is partially empty deassert busy
-			digitalWrite(BUSY_PIN, LOW);
-		}
-		return;
-	}
 
 	if(pos == 0){
+		// first byte in frame is always a command
+		toread= b&0x1F; // number of bytes in this command frame
 		switch(b >> 5) { // command
 			case READ: return; // ignore 0 as that is a read
-			case GET_BUTTONS:
-				// return current button state on next read
-				SPDR = buttons;
-				return;
-			case GET_ENCODER:
-				// return current encoder delta since last read
-				SPDR = enc.read();
-				enc.write(0);
+
+			case GET_STATUS:
+				if(toread == READ_BUTTONS) {
+					// return current button state on next read
+					SPDR = buttons;
+
+				}else if(toread == READ_ENCODER) {
+					// return current encoder delta since last read
+					SPDR = enc.read();
+					enc.write(0);
+
+				}else if(toread == READ_QUEUE) {
+					SPDR= queue.size();
+				}
 				return;
 
+			case OTHER:
+				if(b == INIT) {
+					// INIT
+					buf.cmd= INIT;
+					buf.len= 0;
+					toread= 0;
+					queue.clear(); // make sure command gets queued
+
+				}else if(b == POLL){
+					if(queue.isEmpty()) {
+						// if queue is empty deassert busy
+						digitalWriteFast(BUSY_PIN, LOW);
+					}
+					return;
+				}
+				break;
+
 			default:
-				toread= b&0x1F; // number of bytes in this command frame
 				buf.cmd= b >> 5; // command
 				buf.len= toread; // number of bytes in command frame
 				pos= 1;
@@ -91,9 +117,13 @@ ISR (SPI_STC_vect)
 		// full command frame read transfer it to command buffer and get ready for next frame
 		if(!queue.isFull()) { // this should never fail as busy should have been asserted
 			queue.pushBack(buf);
-			if(queue.size() >= queue.capacity()-2) {
-				digitalWrite(BUSY_PIN, HIGH); // indicate busy here to avoid race condition
+			if(queue.size() >= queue.capacity()-10) {
+				digitalWriteFast(BUSY_PIN, HIGH); // indicate busy here to avoid race condition
+				//Serial.print("Busy\r\n");
 			}
+
+		}else{
+			//Serial.print("WARNING: Queue overflow\r\n");
 		}
 		pos= 0;
 	}
@@ -119,6 +149,7 @@ void setup (void)
   	lcd.begin(20, 4);
 
   	//Serial.begin (115200);   // debugging
+  	//Serial.print("Starting...\r\n");
 
 	// have to send on master in, *slave out*
 	//pinMode(MISO, OUTPUT);
@@ -138,7 +169,7 @@ void setup (void)
     clear();
 
 	lcd.setCursor(0, 0);
-	lcd.print("UPA V0.95");
+	lcd.print("UPA V0.98");
 	lcd.setCursor(0, 1);
 	lcd.print("Starting up...");
 }  // end of setup
@@ -150,15 +181,19 @@ void handle_command(Cmd_t& c)
 
 	switch(c.cmd) {
 		case LCD_WRITE:
-			if(n >= 2) {
+			if(n > 0 && n <= sizeof(c.data)) {
+				for (int i = 0; i < n; ++i) {
+					lcd.write(c.data[i]);
+				}
+			}
+			break;
+
+		case SET_CURSOR:
+			if(n == 1) {
 				// position to write to
 				x= c.data[0]&0x1F;
 				y= c.data[0]>>5;
-
 				lcd.setCursor(x, y);
-				for (int i = 1; i < n; ++i) {
-					lcd.write(c.data[i]);
-				}
 			}
 			break;
 
@@ -180,7 +215,7 @@ void handle_command(Cmd_t& c)
 			}
 			break;
 
-		case INIT:
+		case INIT: // special case command Initialize
 			clear();
 			break;
 	}

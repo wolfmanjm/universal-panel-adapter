@@ -4,3 +4,4 @@
 #include "Wire.h"
 
 #include <Encoder.h>
+#include "digitalWriteFast.h"
