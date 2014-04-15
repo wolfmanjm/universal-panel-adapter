@@ -25,7 +25,7 @@ template<class kind, char length> class RingBuffer {
 };
 
 template<class kind, char length>  char RingBuffer<kind, length>::capacity(){
-    return length;
+    return length-1;
 }
 
 template<class kind, char length>  char RingBuffer<kind, length>::size(){
