@@ -1,15 +1,56 @@
 // Viki Panel
 #include "Arduino.h"
-#include "LiquidTWI2.h"
-#include "utility/twi.h"
-#include "Wire.h"
 #include "digitalWriteFast.h"
 
 #include <Encoder.h>
 #include "RingBuffer.h"
 
+// Pins used
+#define LE_ENCA  2 // D2 encoder pins
+#define LE_ENCB  3 // D3
+#define BUSY_PIN 4 // D4 busy pin
+/*
+Pins used for SPI connection to Smoothie
+MOSI -> D11
+MISO -> D12
+SCK  -> D13
+SS   -> D10
+*/
+
+// select the Panel being used
+//#define VIKI 1
+#define PARALLEL 1
+
+#ifdef VIKI
+#include "LiquidTWI2.h"
+#include "utility/twi.h"
+#include "Wire.h"
 // Connect via i2c, default address #0 (A0-A2 not jumpered)
-LiquidTWI2 lcd(0);
+LiquidTWI2 lcd(0); // uses pins SDA -> A4, SCL -> A5
+
+#elif defined(PARALLEL)
+#include "LiquidCrystalFast.h"
+// parallel LCD Pins
+// LCD pins: RS  RW  EN  D4 D5 D6 D7
+#define LCD_RS  9 // D9
+#define LCD_RW A0 // A0
+#define LCD_EN A1 // A1
+#define LCD_D4  5 // D5
+#define LCD_D5  6 // D6
+#define LCD_D6  7 // D7
+#define LCD_D7  8 // D8
+
+LiquidCrystalFast lcd(LCD_RS, LCD_RW, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
+
+#define CLICK_PIN  A2 // A2 Encoder click pin
+#define BUZZER_PIN A3 // A3 Buzzer pin
+#define LED1       A4 // optional LED1
+#define LED2       A5 // optional LED2
+
+#else
+#error "One of VIKI or PARALLEL needs to be defined"
+#endif
+
 
 typedef struct {
 	byte cmd;
@@ -27,9 +68,6 @@ volatile byte buttons;
 
 long last_ms;
 
-#define LE_ENCA 2
-#define LE_ENCB 3
-#define BUSY_PIN 4
 
 // Command byte is cccnnnnn, where ccc is the command and nnnnn is the length of data in the command
 // 0xFF is a poll for queue empty
@@ -54,6 +92,34 @@ enum Commands {
 #define READ_QUEUE   2
 
 Encoder enc(LE_ENCA, LE_ENCB);
+
+
+static byte readButtons()
+{
+#ifdef VIKI
+	return lcd.readButtons();
+#elif defined(PARALLEL)
+	return digitalReadFast(CLICK_PIN) == HIGH ? 0x01 : 0x00;
+#endif
+}
+
+static void buzz(long duration, uint16_t freq)
+{
+#ifdef VIKI
+	lcd.buzz(duration, freq);
+#elif defined(PARALLEL)
+	// TODO do buzz
+#endif
+}
+
+static void setLed(byte led)
+{
+#ifdef VIKI
+	lcd.setBacklight(led);
+#elif defined(PARALLEL)
+	// TODO if we have leds set them
+#endif
+}
 
 // SPI interrupt routine
 ISR (SPI_STC_vect)
@@ -137,14 +203,19 @@ void clear()
 	buttons= 0;
 	enc.write(0);
 	lcd.clear();
-	lcd.setBacklight(0);
+	setLed(0);
 	queue.clear();
 	digitalWrite(BUSY_PIN, LOW);
 }
 
 void setup (void)
 {
+#ifdef VIKI
   	lcd.setMCPType(LTI_TYPE_MCP23017);
+#elif defined(PARALLEL)
+  	pinMode(CLICK_PIN, INPUT_PULLUP);
+#endif
+
   	// set up the LCD's number of rows and columns:
   	lcd.begin(20, 4);
 
@@ -203,15 +274,15 @@ void handle_command(Cmd_t& c)
 
 		case SET_LEDS:
 			if(n == 1) {
-				lcd.setBacklight(c.data[0]);
+				setLed(c.data[0]);
 			}
 			break;
 
 		case BEEP:
 			if(n == 3) {
-				lcd.buzz(c.data[0], (int)(c.data[1])<<8 | (c.data[2]&0xFF));
+				buzz(c.data[0], (int)(c.data[1])<<8 | (c.data[2]&0xFF));
 			}else{
-				lcd.buzz(100, 1000);
+				buzz(100, 1000);
 			}
 			break;
 
@@ -234,7 +305,7 @@ void loop (void)
 	long delta= now-last_ms;
 
 	if(delta > 50) { // read buttons every 50 ms, 20 times/sec
-		buttons= lcd.readButtons();
+		buttons= readButtons();
 		last_ms= now;
 	}
 }

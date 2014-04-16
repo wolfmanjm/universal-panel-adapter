@@ -8,12 +8,24 @@ Specifically used for running I2C and parallel panels on a Smoothie compatible b
 Viki to Nano
 ---------------
 
-	SDA -> A4
-	SCL -> A5
+	SDA  -> A4
+	SCL  -> A5
 	ENCA -> D2
 	ENCB -> D3
-	Gnd -> Gnd
-	+5v -> +5v
+	Gnd  -> Gnd
+	+5v  -> +5v
+
+Parallel LCD to Nano
+--------------------
+
+	RS -> D9
+	RW -> A0
+	EN -> A1
+	D4 -> D5
+	D5 -> D6
+	D6 -> D7
+	D7 -> D8
+
 
 Smoothie to Nano
 ----------------
@@ -34,6 +46,13 @@ Smoothie config
 Requirements
 ------------
 
-* LiquidTWI2 from https://github.com/lincomatic/LiquidTWI2
 * Encoder library from http://www.pjrc.com/teensy/td_libs_Encoder.html
+
+For Viki and I2C based panels
+* LiquidTWI2 from https://github.com/lincomatic/LiquidTWI2
+
+For Parallel panels
+* LiquidCrystalFast from https://www.pjrc.com/teensy/td_libs_LiquidCrystal.html
+
+
 
