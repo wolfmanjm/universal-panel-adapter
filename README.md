@@ -1,7 +1,8 @@
 universal-panel-adapter
 =======================
 
-Using a cheap Arduino mini pro or nano this sketch allows you to interface a panel like Viki via SPI.
+Using a cheap Arduino mini pro, uno or nano this sketch allows you to
+interface a panel like Viki or a Parallel LCD with encoder via SPI.
 
 Specifically used for running I2C and parallel panels on a Smoothie compatible board.
 
