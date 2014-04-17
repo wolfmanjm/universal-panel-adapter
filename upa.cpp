@@ -99,7 +99,7 @@ static byte readButtons()
 #ifdef VIKI
 	return lcd.readButtons();
 #elif defined(PARALLEL)
-	return digitalReadFast(CLICK_PIN) == HIGH ? 0x01 : 0x00;
+	return digitalReadFast(CLICK_PIN) == LOW ? 0x01 : 0x00;
 #endif
 }
 
