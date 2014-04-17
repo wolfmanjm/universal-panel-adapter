@@ -18,8 +18,8 @@ SS   -> D10
 */
 
 // select the Panel being used
-#define VIKI 1
-//#define PARALLEL 1
+//#define VIKI 1
+#define PARALLEL 1
 
 #ifdef VIKI
 #include "LiquidTWI2.h"

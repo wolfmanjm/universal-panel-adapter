@@ -6,6 +6,13 @@ interface a panel like Viki or a Parallel LCD with encoder via SPI.
 
 Specifically used for running I2C and parallel panels on a Smoothie compatible board.
 
+Prebuild bianries ready for upload to arduino are:-
+
+* viki_panel_adapter.hex for viki/panelolu2
+* parallel_panel_adapter.hex for parallel LCD
+
+Default Wiring is as fallows:-
+
 Viki to Nano
 ---------------
 
@@ -43,6 +50,8 @@ Smoothie to Nano
 Smoothie config
 ---------------
 
+add this to your config file on smoothie
+    panel.enable                                true              # enable panel
 	panel.lcd                                   universal_adapter #
 	panel.spi_channel                           0                 # spi channel to use (0- MISO 0.17, MOSI 0.18, SCK 0.15, SS 0.16)
 	panel.spi_cs_pin                            0.16              # spi chip select
@@ -51,6 +60,7 @@ Smoothie config
 
 Requirements
 ------------
+For compiling the following Arduino libraries are needed
 
 * Encoder library from http://www.pjrc.com/teensy/td_libs_Encoder.html
 
