@@ -16,17 +16,21 @@ Viki to Nano
 	Gnd  -> Gnd
 	+5v  -> +5v
 
-Parallel LCD to Nano
+Parallel LCD pin to Nano
 --------------------
 
-	RS -> D9
-	RW -> A0
-	EN -> A1
-	D4 -> D5
-	D5 -> D6
-	D6 -> D7
-	D7 -> D8
+	 4 RS -> D9
+	 5 RW -> A0
+	 6 EN -> A1
+    11 D4 -> D5
+	12 D5 -> D6
+	13 D6 -> D7
+	14 D7 -> D8
 
+	 1 gnd
+	 2 +5v
+	 3 contrast
+	 15,16 backlight power (on some)
 
 Smoothie to Nano
 ----------------
@@ -43,6 +47,7 @@ Smoothie config
 	panel.spi_channel                           0                 # spi channel to use (0- MISO 0.17, MOSI 0.18, SCK 0.15, SS 0.16)
 	panel.spi_cs_pin                            0.16              # spi chip select
 	panel.busy_pin                              2.13              # busy pin (Azteeg X5 use 2.11)
+
 
 Requirements
 ------------
