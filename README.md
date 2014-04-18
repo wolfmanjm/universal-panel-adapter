@@ -52,7 +52,7 @@ Smoothie config
 
 add this to your config file on smoothie
 
-        panel.enable                                true              # enable panel
+	panel.enable                                true              # enable panel
 	panel.lcd                                   universal_adapter #
 	panel.spi_channel                           0                 # spi channel to use (0- MISO 0.17, MOSI 0.18, SCK 0.15, SS 0.16)
 	panel.spi_cs_pin                            0.16              # spi chip select
