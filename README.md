@@ -29,7 +29,7 @@ Parallel LCD pin to Nano
 	 4 RS -> D9
 	 5 RW -> A0
 	 6 EN -> A1
-        11 D4 -> D5
+	11 D4 -> D5
 	12 D5 -> D6
 	13 D6 -> D7
 	14 D7 -> D8
