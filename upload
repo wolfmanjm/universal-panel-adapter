@@ -1,0 +1,1 @@
+/opt/arduino-1.0.5/hardware/tools/avrdude -C/opt/arduino/hardware/tools/avrdude.conf -v -v -v -v -p m328p -c arduino -P/dev/ttyUSB0 -b57600 -D -Uflash:w:$1:i 
