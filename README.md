@@ -10,6 +10,7 @@ Prebuild bianries ready for upload to arduino are:-
 
 * viki_panel_adapter.hex for viki/panelolu2
 * parallel_panel_adapter.hex for parallel LCD
+* RRD_panel_adapter.hex for Reprap Discount Smart Controller
 
 Default Wiring is as follows:-
 
@@ -71,5 +72,7 @@ For Viki and I2C based panels
 For Parallel panels
 * LiquidCrystalFast from https://www.pjrc.com/teensy/td_libs_LiquidCrystal.html
 
+For ReprapDiscountSmart Controller panels
+* LiquidCrystal from https://www.pjrc.com/teensy/td_libs_LiquidCrystal.html
 
 
