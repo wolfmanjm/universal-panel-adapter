@@ -20,6 +20,7 @@ SS   -> D10
 // select the Panel being used
 #define VIKI 1
 //#define PARALLEL 1
+//#define RRP 1  //Reprap Discount Smart Controller support
 
 #ifdef VIKI
 #include "LiquidTWI2.h"
@@ -29,7 +30,11 @@ SS   -> D10
 LiquidTWI2 lcd(0); // uses pins SDA -> A4, SCL -> A5
 
 #elif defined(PARALLEL)
+#if defined(RRP)
+#include <LiquidCrystal.h>
+#else
 #include "LiquidCrystalFast.h"
+#endif
 // parallel LCD Pins
 // LCD pins: RS  RW  EN  D4 D5 D6 D7
 #define LCD_RS  9 // D9
@@ -40,7 +45,11 @@ LiquidTWI2 lcd(0); // uses pins SDA -> A4, SCL -> A5
 #define LCD_D6  7 // D7
 #define LCD_D7  8 // D8
 
+#if defined(RRP)
+LiquidCrystal lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
+#else
 LiquidCrystalFast lcd(LCD_RS, LCD_RW, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
+#endif
 
 #define CLICK_PIN  A2 // A2 Encoder click pin
 #define BUZZER_PIN A3 // A3 Buzzer pin
