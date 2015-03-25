@@ -9,6 +9,10 @@
 #define LE_ENCA  2 // D2 encoder pins
 #define LE_ENCB  3 // D3
 #define BUSY_PIN 4 // D4 busy pin
+
+// Encoder steps per click
+#define ENC_STEPS 4
+
 /*
 Pins used for SPI connection to Smoothie
 MOSI -> D11
@@ -139,8 +143,13 @@ ISR (SPI_STC_vect)
 
 				}else if(toread == READ_ENCODER) {
 					// return current encoder delta since last read
-					SPDR = enc.read();
-					enc.write(0);
+					int32_t encread = enc.read();
+					if(encread && encread % ENC_STEPS == 0)
+					{
+						SPDR = encread / ENC_STEPS;
+						enc.write(0);
+					}
+					else SPDR = 0;
 
 				}else if(toread == READ_QUEUE) {
 					SPDR= queue.size();
