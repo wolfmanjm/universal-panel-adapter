@@ -29,15 +29,42 @@ Parallel LCD pin to Nano
 	 4 RS -> D9
 	 5 RW -> A0
 	 6 EN -> A1
-	11 D4 -> D5
-	12 D5 -> D6
-	13 D6 -> D7
-	14 D7 -> D8
+	11 DB4 -> D5
+	12 DB5 -> D6
+	13 DB6 -> D7
+	14 DB7 -> D8
 
 	 1 gnd
 	 2 +5v
 	 3 contrast
 	 15,16 backlight power (on some)
+
+PanelOne (5V) LCD pin to Nano
+--------------------
+
+	AUX2  6 RS    -> D9
+	AUX2  8 EN    -> A1
+	AUX2 10 DB4   -> D5
+	AUX2  9 DB5   -> D6
+	AUX2  7 DB6   -> D7
+	AUX2  5 DB7   -> D8
+	AUX2  4 ENCA  -> D2
+	AUX2  3 ENCB  -> D3
+	AUX3  7 ENCSW -> A2
+	
+	AUX2 2 -> GND
+	AUX2 1 -> +5V
+
+PanelOne (5V) SD pin to Smoothie
+--------------------
+
+	AUX3 3  CS -> Unused GPIO : 1.30
+	AUX3 4 CLK -> SCK  : 0.15
+	AUX3 5  DO -> MISO : 0.17
+	AUX3 6  DI -> MOSI : 0.18
+	
+	AUX3 2 -> GND
+	AUX3 8 -> +5V
 
 Smoothie to Nano
 ----------------
@@ -58,6 +85,12 @@ add this to your config file on smoothie
 	panel.spi_cs_pin                            0.16              # spi chip select
 	panel.busy_pin                              2.11              # busy pin NOTE 1.30 on Azteeg X5
 
+second SD card on panelone
+
+	panel.external_sd                     true              # set to true if there is an extrernal sdcard on the panel
+	panel.external_sd.spi_channel         0                 # set spi channel the sdcard is on
+	panel.external_sd.spi_cs_pin          1.30              # set spi chip select for the sdcard (or any spare pin)
+	panel.external_sd.sdcd_pin            nc                # sd detect signal (set to nc if no sdcard detect) (or any spare pin)
 
 Requirements
 ------------
