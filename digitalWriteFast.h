@@ -1,5 +1,4 @@
 #include "Arduino.h"
-#include <wiring.h>
 
 #define BIT_READ(value, bit) (((value) >> (bit)) & 0x01)
 #define BIT_SET(value, bit) ((value) |= (1UL << (bit)))
