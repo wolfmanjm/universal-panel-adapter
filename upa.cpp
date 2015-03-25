@@ -248,7 +248,7 @@ void setup (void)
     clear();
 
 	lcd.setCursor(0, 0);
-	lcd.print("UPA V0.98");
+	lcd.print("UPA V0.99");
 	lcd.setCursor(0, 1);
 	lcd.print("Starting up...");
 }  // end of setup
