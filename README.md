@@ -42,7 +42,7 @@ Parallel LCD pin to Nano
  	Encoder is connected to Nano
 	ENCA  -> D2
 	ENCB  -> D3
-	Click -> D4
+	Click -> A2
 
 Smoothie to Nano
 ----------------
