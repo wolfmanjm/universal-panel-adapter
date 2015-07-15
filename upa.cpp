@@ -21,6 +21,9 @@ SS   -> D10
 #define VIKI 1
 //#define PARALLEL 1
 
+//select if parallel panel has RW pin connected
+#define RW_PIN 1
+
 #ifdef VIKI
 #include "LiquidTWI2.h"
 #include "utility/twi.h"
@@ -32,6 +35,7 @@ LiquidTWI2 lcd(0); // uses pins SDA -> A4, SCL -> A5
 #include "LiquidCrystalFast.h"
 // parallel LCD Pins
 // LCD pins: RS  RW  EN  D4 D5 D6 D7
+// if not defined RW_PIN then RW needs to be connected to GND
 #define LCD_RS  9 // D9
 #define LCD_RW A0 // A0
 #define LCD_EN A1 // A1
@@ -40,7 +44,11 @@ LiquidTWI2 lcd(0); // uses pins SDA -> A4, SCL -> A5
 #define LCD_D6  7 // D7
 #define LCD_D7  8 // D8
 
+#if defined(RW_PIN)
 LiquidCrystalFast lcd(LCD_RS, LCD_RW, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
+#else
+LiquidCrystalFast lcd(LCD_RS, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
+#endif // defined(RW_PIN)
 
 #define CLICK_PIN  A2 // A2 Encoder click pin
 #define BUZZER_PIN A3 // A3 Buzzer pin
@@ -240,7 +248,7 @@ void setup (void)
     clear();
 
 	lcd.setCursor(0, 0);
-	lcd.print("UPA V0.98");
+	lcd.print("UPA V0.99");
 	lcd.setCursor(0, 1);
 	lcd.print("Starting up...");
 }  // end of setup
