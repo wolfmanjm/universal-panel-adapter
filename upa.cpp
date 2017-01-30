@@ -18,8 +18,8 @@ SS   -> D10
 */
 
 // select the Panel being used
-#define VIKI 1
-//#define PARALLEL 1
+//#define VIKI 1
+#define PARALLEL 1
 
 #ifdef VIKI
 #include "LiquidTWI2.h"
@@ -44,13 +44,17 @@ LiquidCrystalFast lcd(LCD_RS, LCD_RW, LCD_EN, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
 
 #define CLICK_PIN  A2 // A2 Encoder click pin
 #define BUZZER_PIN A3 // A3 Buzzer pin
-#define LED1       A4 // optional LED1
-#define LED2       A5 // optional LED2
+#define LED1       A4 // optional LED1: Green LED
+#define LED2       A5 // optional LED2: Red LED
+#define LED3       A6 // optional LED3: Fan LED
+
+#define FAN_LED 0x01
+#define HOT_LED 0x02
+#define BED_LED 0x04
 
 #else
 #error "One of VIKI or PARALLEL needs to be defined"
 #endif
-
 
 typedef struct {
 	byte cmd;
@@ -117,7 +121,42 @@ static void setLed(byte led)
 #ifdef VIKI
 	lcd.setBacklight(led);
 #elif defined(PARALLEL)
-	// TODO if we have leds set them
+
+/* The following was designed around a red/green LED rotary encoder
+ *  (such as the Sparkfun COM-10596) and an extra LED for the fan, 
+ *  but can be easily implemented for any hardware combination
+ * 
+ * In the default setting, OFF = green, BED | HOT = yellow, BED & HOT = red
+ */
+    
+  
+  switch(led & ~0x1) //Eliminating the FAN bit to simplify setting the encoder
+  {
+    case HOT_LED:
+      digitalWriteFast(LED1, HIGH);
+      digitalWriteFast(LED2, HIGH); //Yellow
+      break;
+    case BED_LED:
+      digitalWriteFast(LED1, HIGH);
+      digitalWriteFast(LED2, HIGH); //Yellow
+      break;
+    case (BED_LED | HOT_LED): //Fan & Bed ON
+      digitalWriteFast(LED1, LOW); 
+      digitalWriteFast(LED2, HIGH); //Red
+      break;
+    default:
+      digitalWriteFast(LED1, HIGH);
+      digitalWriteFast(LED2, LOW);  //Green
+      break;
+  }
+
+  //The Fan LED is set separately
+  if (led & 0x1){
+    digitalWriteFast(LED3, HIGH);
+  }
+  else {
+    digitalWriteFast(LED3, LOW);
+  } 
 #endif
 }
 
@@ -214,6 +253,13 @@ void setup (void)
   	lcd.setMCPType(LTI_TYPE_MCP23017);
 #elif defined(PARALLEL)
   	pinMode(CLICK_PIN, INPUT_PULLUP);
+    pinMode(LED1, OUTPUT);
+    pinMode(LED2, OUTPUT);
+    pinMode(LED3, OUTPUT);
+
+    digitalWriteFast(LED1, HIGH); //Initialize everything as green by default
+    digitalWriteFast(LED2, LOW);
+    digitalWriteFast(LED3, LOW);
 #endif
 
   	// set up the LCD's number of rows and columns:
